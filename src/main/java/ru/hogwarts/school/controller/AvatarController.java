@@ -2,6 +2,7 @@ package ru.hogwarts.school.controller;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,6 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 @RestController
 @RequestMapping("avatar")
@@ -66,5 +68,13 @@ public class AvatarController {
             response.setContentLength((int) avatar.getFileSize());
             is.transferTo(os);
         }
+    }
+
+    @GetMapping(value = "get-all")
+    public ResponseEntity<List<Avatar>> getAllAvatarsPaginated(
+            @RequestParam("page") int page,
+            @RequestParam("size") int size) {
+        List<Avatar> avatars = avatarService.getAvatarsPaginated(page, size);
+        return ResponseEntity.ok(avatars);
     }
 }
