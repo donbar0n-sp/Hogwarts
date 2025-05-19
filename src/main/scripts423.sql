@@ -10,3 +10,5 @@ SELECT
     s.age AS student_age
 FROM student s
 JOIN avatar a ON a.student_id = s.id;
+
+/hw32
