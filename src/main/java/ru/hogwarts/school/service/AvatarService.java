@@ -2,6 +2,8 @@ package ru.hogwarts.school.service;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +30,8 @@ import static java.nio.file.StandardOpenOption.CREATE_NEW;
 @Transactional
 public class AvatarService {
 
+    Logger logger = LoggerFactory.getLogger(AvatarService.class);
+
     private final AvatarRepository avatarRepository;
     private final StudentRepository studentRepository;
 
@@ -40,11 +44,13 @@ public class AvatarService {
     }
 
     public void uploadAvatar(Long studentId, MultipartFile avatarFile) throws IOException {
+        logger.info("Invoked uploadAvatar for studentId = {}", studentId);
         Student student = studentRepository.getReferenceById(studentId);
 
         Path filePath = Path.of(avatarsDir, studentId + "." + getExtension(avatarFile.getOriginalFilename()));
         Files.createDirectories(filePath.getParent());
         Files.deleteIfExists(filePath);
+        logger.debug("Saving avatar to file path: {}", filePath);
         try (
                 InputStream is = avatarFile.getInputStream();
                 OutputStream os = Files.newOutputStream(filePath, CREATE_NEW);
@@ -52,6 +58,7 @@ public class AvatarService {
                 BufferedOutputStream bos = new BufferedOutputStream(os, 1024)
         ) {
             bis.transferTo(bos);
+            logger.info("Avatar file saved successfully for studentId = {}", studentId);
         }
 
         Avatar avatar = findAvatar(studentId);
@@ -60,14 +67,21 @@ public class AvatarService {
         avatar.setFileSize(avatarFile.getSize());
         avatar.setMediaType(avatarFile.getContentType());
         avatar.setData(generateDataForDB(filePath));
+        logger.debug("Saving avatar entity to database for studentId = {}", studentId);
         avatarRepository.save(avatar);
     }
 
     public Avatar findAvatar(Long studentId) {
-        return avatarRepository.findByStudentId(studentId).orElse(new Avatar());
+        logger.debug("Invoked findAvatar for studentId = {}", studentId);
+        return avatarRepository.findByStudentId(studentId)
+                .orElseGet(() -> {
+                    logger.warn("No avatar found for studentId = {} — returning new Avatar instance", studentId);
+                    return new Avatar();
+                });
     }
 
     private byte[] generateDataForDB(Path filePath) throws IOException {
+        logger.debug("Generating preview image for DB from file: {}", filePath.getFileName());
         try (
                 InputStream is = Files.newInputStream(filePath);
                 BufferedInputStream bis = new BufferedInputStream(is, 1024);
@@ -81,15 +95,19 @@ public class AvatarService {
             graphics2D.dispose(); // Very important to dispose graphics
 
             ImageIO.write(preview, getExtension(filePath.getFileName().toString()), baos);
+            logger.debug("Preview image generated and converted to byte array");
             return baos.toByteArray();
         }
     }
 
     private String getExtension(String fileName) {
-        return fileName.substring(fileName.lastIndexOf(".") + 1);
+        String ext = fileName.substring(fileName.lastIndexOf(".") + 1);
+        logger.debug("Extracted file extension: {}", ext);
+        return ext;
     }
 
     public List<Avatar> getAvatarsPaginated(int page, int size) {
+        logger.info("Invoked getAvatarsPaginated with page = {}, size = {}", page, size);
         PageRequest pageRequest = PageRequest.of(page - 1, size);
         return avatarRepository.findAll(pageRequest).getContent();
     }
