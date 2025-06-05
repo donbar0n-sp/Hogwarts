@@ -18,7 +18,7 @@ public class StudentService {
 
     private final StudentRepository studentRepository;
 
-    Logger logger = LoggerFactory.getLogger(StudentService.class);
+    private static final Logger logger = LoggerFactory.getLogger(StudentService.class);
 
     @Autowired
     public StudentService(StudentRepository studentRepository) {
@@ -92,5 +92,23 @@ public class StudentService {
     public List<Student> getLastFiveStudents() {
         logger.info("Invoked method to get last five students");
         return studentRepository.getLastFiveStudents();
+    }
+
+    public List<String> getStudentNamesStartingWithA() {
+        logger.info("Invoked method to get student names starting with 'А'");
+        return studentRepository.findAll().stream()
+                .map(Student::getName)
+                .map(String::toUpperCase)
+                .filter(name -> name.startsWith("А"))
+                .sorted()
+                .toList();
+    }
+
+    public double getAverageAge() {
+        logger.info("Invoked method to calculate average student age using Stream API");
+        return studentRepository.findAll().stream()
+                .mapToInt(Student::getAge)
+                .average()
+                .orElse(0.0);
     }
 }

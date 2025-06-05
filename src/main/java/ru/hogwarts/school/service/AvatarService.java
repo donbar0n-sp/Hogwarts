@@ -30,7 +30,7 @@ import static java.nio.file.StandardOpenOption.CREATE_NEW;
 @Transactional
 public class AvatarService {
 
-    Logger logger = LoggerFactory.getLogger(AvatarService.class);
+    private static final Logger logger = LoggerFactory.getLogger(AvatarService.class);
 
     private final AvatarRepository avatarRepository;
     private final StudentRepository studentRepository;
