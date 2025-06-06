@@ -111,4 +111,9 @@ public class StudentService {
                 .average()
                 .orElse(0.0);
     }
+
+    public List<Student> getFirstSixStudents() {
+        logger.info("Invoked method to get first six students");
+        return studentRepository.findAll().stream().limit(6).toList();
+    }
 }
