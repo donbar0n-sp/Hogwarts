@@ -1,0 +1,7 @@
+org.skypro.recommendationService
+org.skypro.recommendationService.configuration
+org.skypro.recommendationService.controller
+org.skypro.recommendationService.dto
+org.skypro.recommendationService.repository
+org.skypro.recommendationService.rules
+org.skypro.recommendationService.service
